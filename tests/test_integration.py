@@ -57,6 +57,7 @@ class Upstream:
         self.interactions = []
         self.mcp_rejections = []
         self.mcp_results = []
+        self.mcp_states = []
 
     async def connection(self, reader, writer):
         self.connections.add(writer)
@@ -140,7 +141,7 @@ class Upstream:
             if self.mode in ("patch-repair", "patch-invalid"):
                 patch_call(False, 0)
                 return
-            if self.mode in ("tool", "parallel-tools", "parallel-invalid"):
+            if self.mode in ("tool", "parallel-tools", "parallel-invalid", "mcp-discovery"):
                 args = {
                     "city": json_format.ParseDict("北京", Value()).SerializeToString(),
                     "options": json_format.ParseDict(
@@ -334,11 +335,27 @@ class Upstream:
                                     self.mcp_rejections.append(reply)
                                     patch_call(self.mode == "patch-repair", attempt + 1)
                                     continue
-                                assert reply.id == 901 and reply.exec_id == "context-exec"
-                                self.contexts.append(
-                                    reply.request_context_result.success.request_context
-                                )
-                                ready = True
+                                if reply.WhichOneof("message") == "mcp_state_exec_result":
+                                    assert reply.id == 902 and reply.exec_id == "directory-exec"
+                                    self.mcp_states.append(reply.mcp_state_exec_result)
+                                    ready = True
+                                else:
+                                    assert reply.id == 901 and reply.exec_id == "context-exec"
+                                    self.contexts.append(
+                                        reply.request_context_result.success.request_context
+                                    )
+                                    if self.mode == "mcp-discovery":
+                                        message(
+                                            pb.AgentServerMessage(
+                                                exec_server_message=pb.ExecServerMessage(
+                                                    id=902,
+                                                    exec_id="directory-exec",
+                                                    mcp_state_exec_args=pb.McpStateExecArgs(),
+                                                )
+                                            )
+                                        )
+                                    else:
+                                        ready = True
                             if (
                                 ready
                                 and answered
@@ -436,8 +453,35 @@ async def test_real_h2_bidi_history_context_compression_and_flow_control():
         assert state.contexts[0].tools[0].name == "weather"
         assert state.contexts[0].env.time_zone == "UTC"
         assert state.runs[0].action.user_message_action.user_message.text == "active"
-        assert state.headers[0]["x-cursor-agent-allowed-tools"] == "mcp_tool_call"
+        assert (
+            state.headers[0]["x-cursor-agent-allowed-tools"]
+            == "mcp_tool_call,get_mcp_tools_tool_call"
+        )
         assert state.headers[0]["content-type"] == "application/connect+proto"
+
+
+async def test_real_h2_mcp_directory_then_tool_dispatch():
+    definition = pb.McpToolDefinition(
+        name="weather",
+        tool_name="weather",
+        provider_identifier="openai",
+        description="Fixture weather",
+        input_schema_json='{"type":"object"}',
+    )
+    async with upstream("mcp-discovery") as state:
+        events = await collect(state.config, TurnInput([], "weather", [definition]))
+        assert events[0].type == "tool_call", events[0].error
+        assert events[0].name == "weather"
+        assert events[-1].reason == "tool_calls"
+        assert len(state.mcp_states) == 1
+        directory = state.mcp_states[0]
+        assert directory.WhichOneof("result") == "success"
+        assert directory.success.servers[0].server_identifier == "openai"
+        assert list(directory.success.servers[0].tools) == [definition]
+        assert (
+            state.headers[0]["x-cursor-agent-allowed-tools"]
+            == "mcp_tool_call,get_mcp_tools_tool_call"
+        )
 
 
 async def test_tool_argument_value_decoding_and_safe_id():

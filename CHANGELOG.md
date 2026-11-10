@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix modern MCP discovery: advertise the registry operation for caller-owned MCP tools and answer correlated, server-filtered MCP state requests without adding a native host executor.
+
 - OpenAI-compatible Chat Completions and Responses APIs backed by Cursor.
 - Streaming, client tool calls, inline images, native web search, and response history.
 - Account rotation, token refresh, SOCKS5 proxy support, and request diagnostics.

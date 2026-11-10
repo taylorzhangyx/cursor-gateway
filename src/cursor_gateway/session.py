@@ -116,10 +116,14 @@ async def _run_protocol(
     decoder = FrameDecoder()
     search_scratch = SearchScratch(min(config.max_body_bytes, MAX_FRAME_BYTES))
     headers = rpc_headers(token, config, streaming=True)
-    if turn.web_search and config.allowed_native_tools:
-        headers["x-cursor-agent-allowed-tools"] = ",".join(
-            dict.fromkeys((*config.allowed_native_tools, "web_search_tool_call", "read_tool_call"))
-        )
+    if config.allowed_native_tools:
+        allowed = list(config.allowed_native_tools)
+        if turn.tools and "mcp_tool_call" in allowed:
+            # Modern Cursor discovers the caller-owned MCP directory before dispatch.
+            allowed.append("get_mcp_tools_tool_call")
+        if turn.web_search:
+            allowed.extend(("web_search_tool_call", "read_tool_call"))
+        headers["x-cursor-agent-allowed-tools"] = ",".join(dict.fromkeys(allowed))
     async with H2Stream(
         config.cursor_base_url,
         "/agent.v1.AgentService/Run",
@@ -237,6 +241,32 @@ async def _run_protocol(
                         await send(reply)
                     elif turn.web_search and operation in ("write_args", "read_args"):
                         await send(search_scratch.handle(execution))
+                    elif operation == "mcp_state_exec_args":
+                        reply = pb.AgentClientMessage()
+                        response = reply.exec_client_message
+                        response.id, response.exec_id = execution.id, execution.exec_id
+                        success = response.mcp_state_exec_result.success
+                        success.SetInParent()
+                        requested = set(execution.mcp_state_exec_args.server_identifiers)
+                        servers = {}
+                        # These are already-registered caller-owned functions, not
+                        # external MCP processes. kick_only needs no startup action.
+                        for tool in turn.tools:
+                            provider = tool.provider_identifier or "openai"
+                            if requested and provider not in requested:
+                                continue
+                            if provider not in servers:
+                                servers[provider] = success.servers.add(
+                                    server_name=provider, server_identifier=provider
+                                )
+                            servers[provider].tools.add().CopyFrom(tool)
+                        diagnostic_event(
+                            "cursor_mcp_directory",
+                            requested_server_count=len(requested),
+                            server_count=len(servers),
+                            tool_count=sum(len(server.tools) for server in servers.values()),
+                        )
+                        await send(reply)
                     elif operation == "mcp_args":
                         args = execution.mcp_args
                         name = args.name or args.tool_name or "unknown"
