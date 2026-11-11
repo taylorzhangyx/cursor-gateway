@@ -46,3 +46,14 @@ with recent reasoning summaries. A custom provider's automatic compaction can us
 the gateway also implements `/v1/responses/compact` and in-stream `compaction_trigger`.
 
 See the [API reference](api-reference.md) for endpoint behavior and limits, and the [contributing guide](../../CONTRIBUTING.md) for development and automated verification.
+
+
+### Parameterized models
+
+Use a Cursor App parameterized ID in `model`:
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+Parameters are forwarded as structured `requested_model.parameters`; Grok 4.7 `context=500k` also sets both `max_mode` fields. Plain legacy IDs keep their existing behavior and alone do not distinguish 256k from 500k. Configure client context budgets and compaction separately, leaving output headroom. Malformed, duplicate or unsupported Grok 4.7 parameters return HTTP 400 instead of silently degrading.

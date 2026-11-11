@@ -713,3 +713,14 @@ cursor-gateway/
 이 프로젝트는 **[AGPL-3.0-only](../../LICENSE)** 라이선스로 제공됩니다. 전체 출처 표시는 [NOTICE](../../NOTICE)를 참고하세요.
 
 수정한 버전을 다른 사람에게 배포하거나 제공할 때는 해당 소스 코드 제공에 관한 AGPL 요구 사항을 준수하세요. 실행 중인 버전의 전체 소스를 저장소 또는 소스 배포본으로 제공하고, 네트워크 사용자가 소스에 접근할 수 있는 명확한 경로를 마련하세요. 컨테이너 빌드에서는 `--build-arg SOURCE_URL=PUBLIC_SOURCE_URL`로 공개 소스 위치를 기록할 수 있습니다.
+
+
+### 매개변수 모델
+
+`model`에 Cursor App의 매개변수 모델 ID를 사용할 수 있습니다.
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+매개변수는 `requested_model.parameters`로 전달되며 Grok 4.7의 `context=500k`는 두 `max_mode` 필드에도 반영됩니다. 일반 legacy ID 동작은 유지됩니다. 출력 여유를 남겨 클라이언트 컨텍스트 예산과 압축 기준을 별도로 설정하세요. 잘못되거나 중복되거나 지원되지 않는 Grok 4.7 매개변수는 HTTP 400을 반환합니다.

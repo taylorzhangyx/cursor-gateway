@@ -713,3 +713,14 @@ Laporkan kerentanan secara privat sesuai [kebijakan keamanan (bahasa Mandarin / 
 Proyek ini menggunakan lisensi **[AGPL-3.0-only](../../LICENSE)**. Lihat atribusi lengkap di [NOTICE](../../NOTICE).
 
 Saat mendistribusikan atau mengoperasikan versi modifikasi untuk orang lain, patuhi persyaratan AGPL mengenai penyediaan kode sumber terkait. Sediakan seluruh kode sumber versi yang sedang dijalankan melalui repositori atau distribusi sumber, dan berikan akses yang jelas ke kode sumber bagi pengguna jaringan. Build kontainer dapat mencatat lokasi sumber publik dengan `--build-arg SOURCE_URL=PUBLIC_SOURCE_URL`.
+
+
+### Model berparameter
+
+Gunakan ID model berparameter dari Cursor App pada `model`:
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+Parameter diteruskan melalui `requested_model.parameters`; Grok 4.7 dengan `context=500k` juga mengatur kedua field `max_mode`. Perilaku ID legacy tidak berubah. Atur anggaran konteks dan pemadatan klien secara terpisah dengan ruang untuk keluaran. Parameter Grok 4.7 yang salah, duplikat, atau tidak didukung menghasilkan HTTP 400.

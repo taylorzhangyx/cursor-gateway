@@ -229,3 +229,14 @@ Chat Completions 使用完整历史回放：网关将历史工具调用和结果
 `parallel_tool_calls=true` 时可收集上游同批到达的多个调用；工具由调用方执行。
 工具参数按 `google.protobuf.Value` 解码，支持对象、数组、布尔值、数字和 null。
 上游调用 ID 中的换行等字符会转换为下划线，避免下游客户端拒绝该 ID。
+
+
+### 参数化模型
+
+可在 `model` 中使用 Cursor App 的参数化 ID：
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+参数会作为结构化 `requested_model.parameters` 发送；Grok 4.7 的 `context=500k` 同时设置两个 `max_mode` 字段。普通 legacy ID 保持原行为，不能仅凭其名称区分 256k 和 500k。客户端上下文预算与压缩阈值必须另行配置；500k 窗口不代表可以不留输出余量。重复、格式错误或不支持的 Grok 4.7 参数返回 HTTP 400，不静默降级。

@@ -236,3 +236,14 @@ and sends a user turn asking it to continue. With `parallel_tool_calls=true`, mu
 in the same upstream batch can be collected; the caller executes them.
 Tool arguments are decoded through `google.protobuf.Value`, supporting objects, arrays, booleans, numbers, and null.
 Characters such as newlines in upstream call IDs are converted to underscores to avoid downstream client rejection.
+
+
+### Parameterized models
+
+Use a Cursor App parameterized ID in `model`:
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+Parameters are forwarded as structured `requested_model.parameters`; Grok 4.7 `context=500k` also sets both `max_mode` fields. Plain legacy IDs keep their existing behavior and alone do not distinguish 256k from 500k. Configure client context budgets and compaction separately, leaving output headroom. Malformed, duplicate or unsupported Grok 4.7 parameters return HTTP 400 instead of silently degrading.

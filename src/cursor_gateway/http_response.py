@@ -10,6 +10,7 @@ from starlette.requests import ClientDisconnect
 from .auth import Account, AccountError, AccountPool
 from .config import Config
 from .diagnostics import event, failure, protect_secret, set_stage, unexpected
+from .model_parameters import parse_model_spec
 from .models import ModelCatalog, client_name, upstream_id
 from .protocol import json_bytes
 from .session import TurnEvent
@@ -130,6 +131,7 @@ class GenerationResponse(Response):
             model = self.request_body.get("model") or client_name("auto", self.config.model_prefix)
             model = model.strip()
             resolved = upstream_id(model, self.config.model_prefix, known)
+            parse_model_spec(resolved)
             set_stage("translation")
             turn = build_turn_input(self.request_body, self.config)
             turn.custom_tool_formats = {

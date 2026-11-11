@@ -713,3 +713,14 @@ Relate vulnerabilidades de forma privada conforme a [política de segurança (ch
 Este projeto está licenciado sob **[AGPL-3.0-only](../../LICENSE)**. Veja a atribuição completa em [NOTICE](../../NOTICE).
 
 Ao distribuir ou operar uma versão modificada para outras pessoas, cumpra os requisitos da AGPL quanto ao fornecimento do código-fonte correspondente. Disponibilize o código-fonte completo da versão em execução pelo repositório ou por uma distribuição de fontes, com um acesso claro ao código para usuários da rede. Builds de contêineres podem registrar a localização pública do código com `--build-arg SOURCE_URL=PUBLIC_SOURCE_URL`.
+
+
+### Modelos parametrizados
+
+Use um ID parametrizado do Cursor App em `model`:
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+Os parâmetros são enviados por `requested_model.parameters`; Grok 4.7 com `context=500k` também define os dois campos `max_mode`. IDs legacy mantêm o comportamento anterior. Configure o contexto e a compactação do cliente separadamente, reservando espaço para a resposta. Parâmetros Grok 4.7 inválidos, duplicados ou não suportados retornam HTTP 400.

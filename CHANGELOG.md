@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Forward bracketed model parameters through RequestedModel; select Grok 4.7 500k with explicit max_mode flags, preserve legacy IDs, and reject malformed or unsupported Grok parameter values.
+
 - Fix modern MCP discovery: advertise the registry operation for caller-owned MCP tools and answer correlated, server-filtered MCP state requests without adding a native host executor.
 
 - OpenAI-compatible Chat Completions and Responses APIs backed by Cursor.

@@ -713,3 +713,14 @@ cursor-gateway/
 本プロジェクトは **[AGPL-3.0-only](../../LICENSE)** で提供されています。帰属表示の全体は [NOTICE](../../NOTICE) を参照してください。
 
 改変版を他者に配布または提供する場合は、対応するソースコードの提供に関する AGPL の要件に従ってください。稼働中のバージョンの完全なソースをリポジトリまたはソース配布物で提供し、ネットワーク利用者がソースにアクセスできる明確な入口を用意してください。コンテナのビルド時には `--build-arg SOURCE_URL=PUBLIC_SOURCE_URL` で公開ソースの場所を記録できます。
+
+
+### パラメーター付きモデル
+
+`model` に Cursor App のパラメーター付き ID を指定できます。
+
+```text
+grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
+```
+
+パラメーターは `requested_model.parameters` として送信され、Grok 4.7 の `context=500k` は両方の `max_mode` にも反映されます。通常の legacy ID の動作は変わりません。クライアントのコンテキスト予算と圧縮は、出力の余裕を残して別途設定してください。不正・重複・未対応の Grok 4.7 パラメーターは HTTP 400 になります。

@@ -13,6 +13,7 @@ from uuid import uuid4
 from .config import Config
 from .diagnostics import event as diagnostic_event
 from .images import selected_image
+from .model_parameters import parse_model_spec
 from .models import rpc_headers
 from .proto import agent_pb2 as pb
 from .protocol import (
@@ -99,10 +100,28 @@ async def _run_protocol(
     run = request.run_request
     run.conversation_state.root_prompt_messages_json.extend(root_ids)
     run.conversation_id = str(uuid4())
-    run.model_details.model_id = model
+    selection = parse_model_spec(model)
+    run.model_details.model_id = selection.legacy_model_id
     run.model_details.display_model_id = model
     run.model_details.display_name = model
-    run.requested_model.model_id = model
+    run.requested_model.model_id = selection.model_id
+    for key, value in selection.parameters:
+        run.requested_model.parameters.add(id=key, value=value)
+    if selection.max_mode is not None:
+        run.model_details.max_mode = selection.max_mode
+        run.requested_model.max_mode = selection.max_mode
+    if selection.parameters:
+        values = dict(selection.parameters)
+        diagnostic_event(
+            "cursor_model_selection",
+            model_id=selection.model_id,
+            legacy_model_id=selection.legacy_model_id,
+            parameter_ids=list(values),
+            max_mode=selection.max_mode,
+            context=values.get("context"),
+            reasoning_effort=values.get("reasoning_effort"),
+            fast=values.get("fast"),
+        )
     if turn.user_text.strip() or turn.images:
         run.action.user_message_action.user_message.text = turn.user_text
         run.action.user_message_action.user_message.message_id = str(uuid4())
