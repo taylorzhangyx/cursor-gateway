@@ -724,3 +724,5 @@ grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
 ```
 
 Parameter diteruskan melalui `requested_model.parameters`; Grok 4.7 dengan `context=500k` juga mengatur kedua field `max_mode`. Perilaku ID legacy tidak berubah. Atur anggaran konteks dan pemadatan klien secara terpisah dengan ruang untuk keluaran. Parameter Grok 4.7 yang salah, duplikat, atau tidak didukung menghasilkan HTTP 400.
+
+Untuk pemilih yang memisahkan koma, gunakan bentuk gateway `grok-4.7-xhigh-fast[context=500k]`; semua parameter yang sama tetap dikirim. Nilai yang bertentangan dengan ID legacy ditolak.

@@ -49,6 +49,18 @@ def parse_model_spec(model: str) -> ModelSpec:
         if key in values:
             raise RequestError("duplicate model parameter: " + key, param="model")
         values[key] = value
+    legacy = re.fullmatch(r"((?:cursor-)?grok-4\.7)-(low|medium|high|xhigh)(-fast)?", base)
+    if legacy:
+        base, effort, fast_suffix = legacy.groups()
+        for key, value in {
+            "reasoning_effort": effort,
+            "fast": "true" if fast_suffix else "false",
+        }.items():
+            if key in values and values[key] != value:
+                raise RequestError(
+                    "model parameter conflicts with legacy ID: " + key, param="model"
+                )
+            values.setdefault(key, value)
     max_mode = None
     if base.removeprefix("cursor-") == "grok-4.7":
         for key, value in values.items():

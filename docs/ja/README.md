@@ -724,3 +724,5 @@ grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
 ```
 
 パラメーターは `requested_model.parameters` として送信され、Grok 4.7 の `context=500k` は両方の `max_mode` にも反映されます。通常の legacy ID の動作は変わりません。クライアントのコンテキスト予算と圧縮は、出力の余裕を残して別途設定してください。不正・重複・未対応の Grok 4.7 パラメーターは HTTP 400 になります。
+
+ID をカンマで分割する選択画面では、Gateway の互換形式 `grok-4.7-xhigh-fast[context=500k]` を使用できます。上流には同じ全パラメーターが送信され、legacy ID と矛盾する指定は拒否されます。

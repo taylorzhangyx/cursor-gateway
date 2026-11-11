@@ -65,7 +65,8 @@ async def test_model_parameters_are_serialized_on_run(
         ("/v1/responses/compact", False),
     ],
 )
-async def test_parameterized_selection_reaches_real_h2(tmp_path, path, stream):
+@pytest.mark.parametrize("spec", [SPEC, "grok-4.7-xhigh-fast[context=500k]"])
+async def test_parameterized_selection_reaches_real_h2(tmp_path, path, stream, spec):
     async with upstream() as state:
         file = tmp_path / "accounts.json"
         write_accounts(file, [Account("test", "fake-token")])
@@ -75,7 +76,7 @@ async def test_parameterized_selection_reaches_real_h2(tmp_path, path, stream):
         async with httpx.AsyncClient(
             transport=httpx.ASGITransport(app), base_url="http://test"
         ) as client:
-            body = {"model": "gateway-" + SPEC, "stream": stream}
+            body = {"model": "gateway-" + spec, "stream": stream}
             if path == "/v1/chat/completions":
                 body["messages"] = [{"role": "user", "content": "hello"}]
             else:
@@ -130,3 +131,37 @@ def test_parameter_parser_preserves_values_and_rejects_whitespace():
     assert dict(spec.parameters) == {"version": "V1.2", "fast": "false"}
     with pytest.raises(RequestError):
         parse_model_spec("grok-4.7[fast= true]")
+
+
+@pytest.mark.parametrize(
+    "model,expected",
+    [
+        ("grok-4.7-xhigh-fast[context=500k]", PARAMS),
+        (
+            "grok-4.7-low[context=256k]",
+            {"context": "256k", "reasoning_effort": "low", "fast": "false"},
+        ),
+    ],
+)
+def test_legacy_parameter_overrides_preserve_profile(model, expected):
+    from cursor_gateway.model_parameters import parse_model_spec
+
+    result = parse_model_spec(model)
+    assert result.model_id == "grok-4.7"
+    assert dict(result.parameters) == expected
+    assert result.max_mode is (expected["context"] == "500k")
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "grok-4.7-xhigh-fast[context=1m]",
+        "grok-4.7-xhigh-fast[context=500k,fast=false]",
+        "grok-4.7-xhigh-fast[reasoning_effort=low]",
+    ],
+)
+def test_legacy_parameter_overrides_reject_invalid_or_conflicting_values(model):
+    from cursor_gateway.model_parameters import parse_model_spec
+
+    with pytest.raises(RequestError):
+        parse_model_spec(model)

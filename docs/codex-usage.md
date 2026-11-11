@@ -52,3 +52,5 @@ grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
 ```
 
 参数会作为结构化 `requested_model.parameters` 发送；Grok 4.7 的 `context=500k` 同时设置两个 `max_mode` 字段。普通 legacy ID 保持原行为，不能仅凭其名称区分 256k 和 500k。客户端上下文预算与压缩阈值必须另行配置；500k 窗口不代表可以不留输出余量。重复、格式错误或不支持的 Grok 4.7 参数返回 HTTP 400，不静默降级。
+
+对会拆分逗号的模型选择器，可使用 Gateway 兼容写法 `grok-4.7-xhigh-fast[context=500k]`；它与上面的完整参数写法发送同一组上游参数。与 legacy ID 冲突的参数会被拒绝。

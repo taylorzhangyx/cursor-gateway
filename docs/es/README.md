@@ -724,3 +724,5 @@ grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
 ```
 
 Los parámetros se envían mediante `requested_model.parameters`; Grok 4.7 con `context=500k` también activa ambos campos `max_mode`. Los ID legacy mantienen su comportamiento. Configure por separado el contexto y la compactación del cliente, reservando espacio para la respuesta. Los parámetros de Grok 4.7 incorrectos, duplicados o no admitidos devuelven HTTP 400.
+
+Si el selector separa los ID por comas, use la forma del gateway `grok-4.7-xhigh-fast[context=500k]`; envía los mismos parámetros completos. Se rechazan valores incompatibles con el ID legacy.

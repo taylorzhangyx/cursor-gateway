@@ -724,3 +724,5 @@ grok-4.7[context=500k,reasoning_effort=xhigh,fast=true]
 ```
 
 매개변수는 `requested_model.parameters`로 전달되며 Grok 4.7의 `context=500k`는 두 `max_mode` 필드에도 반영됩니다. 일반 legacy ID 동작은 유지됩니다. 출력 여유를 남겨 클라이언트 컨텍스트 예산과 압축 기준을 별도로 설정하세요. 잘못되거나 중복되거나 지원되지 않는 Grok 4.7 매개변수는 HTTP 400을 반환합니다.
+
+쉼표로 ID를 나누는 선택기에서는 Gateway 호환 형식 `grok-4.7-xhigh-fast[context=500k]`를 사용할 수 있습니다. 동일한 전체 매개변수가 전송되며 legacy ID와 충돌하는 값은 거부됩니다.
